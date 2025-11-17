@@ -607,7 +607,7 @@ Password: password123
 **GitHub**: [@masatojupyter](https://github.com/masatojupyter)
 
 ### Jupyter株式会社
-**所在地**: 東京都渋谷区渋谷2-22-3 渋谷東口ビル5F
+**所在地**: 東京都渋谷区渋谷2-19-15 宮益坂ビルディング609
 **事業内容**: ブロックチェーン・Web3ソリューション開発、AIシステム開発支援
 **ウェブサイト**: [https://jupyter.co.jp](https://jupyter.co.jp)
 
