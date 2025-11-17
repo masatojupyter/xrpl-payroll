@@ -8,6 +8,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // url      = env("DIRECT_URL")
 }
 
 enum AttendanceType {
@@ -193,7 +194,7 @@ model AttendanceRecord {
   rejectionReason String? // Required reason if rejected (max 500 chars)
 
   // Payment relation
-  payroll         Payroll? // Link to payment record when employee claims payment
+  payroll Payroll? // Link to payment record when employee claims payment
 
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
