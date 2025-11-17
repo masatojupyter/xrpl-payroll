@@ -1,0 +1,278 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AttendanceType {
+  present
+  absent
+  leave
+  holiday
+  sick_leave
+  half_day
+}
+
+model User {
+  id                String        @id @default(cuid())
+  email             String        @unique
+  password          String
+  emailVerified     DateTime?
+  verificationToken String?       @unique
+  tokenExpiry       DateTime?
+  role              String        @default("user")
+  companyName       String?
+  firstName         String?
+  lastName          String?
+  phoneNumber       String?
+  address           String?
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model Organization {
+  id              String       @id @default(cuid())
+  name            String
+  address         String?
+  phone           String?
+  email           String?
+  taxId           String?
+  fiscalYearStart String?      @default("04-01")
+  users           User[]
+  employees       Employee[]
+  departments     Department[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Department {
+  id             String       @id @default(cuid())
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employees      Employee[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
+model Employee {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employeeCode         String
+  email                String
+  firstName            String
+  lastName             String
+  departmentId         String?
+  department           Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  position             String?
+  hourlyRate           Decimal      @db.Decimal(10, 2)
+  walletAddress        String?
+  employmentType       String       @default("full-time") // full-time, part-time, contract
+  joinDate             DateTime     @default(now())
+  isActive             Boolean      @default(true)
+  password             String?
+  invitationToken      String?      @unique
+  invitationExpiry     DateTime?
+  isInvitationAccepted Boolean      @default(false)
+  payrolls             Payroll[]
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@unique([employeeCode, organizationId])
+  @@unique([email, organizationId])
+  @@index([organizationId])
+  @@index([departmentId])
+  @@index([walletAddress])
+  @@index([isActive])
+  @@index([invitationToken])
+}
+
+model Payroll {
+  id                 String              @id @default(cuid())
+  employeeId         String
+  employee           Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  organizationId     String
+  period             String // YYYY-MM or YYYY-MM-DD format (e.g., "2024-01" for monthly, "2024-01-15" for daily)
+  totalHours         Decimal             @db.Decimal(10, 2)
+  totalAmountUSD     Decimal             @db.Decimal(18, 2)
+  totalAmountXRP     Decimal?            @db.Decimal(18, 6)
+  exchangeRate       Decimal?            @db.Decimal(18, 6) // XRP/USD rate at payment time
+  totalAmount        Decimal             @db.Decimal(18, 2) // Legacy field, kept for compatibility
+  transactionHash    String?
+  status             String              @default("pending") // pending, paid, failed
+  transactionStatus  String              @default("pending") // pending, processing, completed, failed
+  paidAt             DateTime?
+  failureReason      String?
+  retryCount         Int                 @default(0)
+  lastRetryAt        DateTime?
+  attendanceRecordId String?             @unique // Link to daily attendance record for daily payments
+  attendanceRecord   AttendanceRecord?   @relation(fields: [attendanceRecordId], references: [id], onDelete: SetNull)
+  paymentTransaction PaymentTransaction?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@unique([employeeId, period])
+  @@index([organizationId, period])
+  @@index([employeeId, period])
+  @@index([status])
+  @@index([transactionStatus])
+  @@index([paidAt])
+  @@index([attendanceRecordId])
+}
+
+model PaymentTransaction {
+  id                String    @id @default(cuid())
+  payrollId         String    @unique
+  payroll           Payroll   @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  fromWalletAddress String // Sender wallet address
+  toWalletAddress   String // Recipient wallet address
+  amountUSD         Decimal   @db.Decimal(18, 2) // Payment amount in USD
+  amountXRP         Decimal   @db.Decimal(18, 6) // Payment amount in XRP
+  exchangeRate      Decimal   @db.Decimal(18, 6) // XRP/USD exchange rate used
+  transactionHash   String?   @unique // XRPL transaction hash
+  ledgerIndex       Int? // XRPL ledger index
+  status            String    @default("pending") // pending, processing, completed, failed
+  errorMessage      String? // Error message if transaction failed
+  metadata          Json? // Additional transaction metadata
+  initiatedBy       String // User ID who initiated the payment
+  completedAt       DateTime? // When the transaction was completed
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([payrollId])
+  @@index([status])
+  @@index([transactionHash])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // employee_registered, payroll_completed, error, system
+  title     String
+  message   String
+  metadata  Json? // Additional data related to the notification
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([type])
+}
+
+model AttendanceRecord {
+  id               String         @id @default(cuid())
+  userId           String
+  date             DateTime       @db.Date
+  checkInTime      BigInt // Unix timestamp in seconds
+  checkOutTime     BigInt? // Unix timestamp in seconds
+  totalWorkMinutes Int            @default(0)
+  status           String         @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, CORRECTED
+  attendanceType   AttendanceType @default(present)
+  notes            String? // Optional notes for the attendance record
+
+  // Approval fields
+  approvalStatus  String  @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy      String? // Admin User ID who approved/rejected
+  approvedAt      BigInt? // Unix timestamp in seconds when approved/rejected
+  approvalComment String? // Optional comment from approver (max 500 chars)
+  rejectionReason String? // Required reason if rejected (max 500 chars)
+
+  // Payment relation
+  payroll         Payroll? // Link to payment record when employee claims payment
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  operationLogs   OperationLog[]
+  timeCorrections TimeCorrection[]
+  timerEvents     TimerEvent[]
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+  @@index([status])
+  @@index([attendanceType])
+  @@index([approvalStatus])
+}
+
+model OperationLog {
+  id                 String            @id @default(cuid())
+  userId             String
+  attendanceRecordId String?
+  attendanceRecord   AttendanceRecord? @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+  action             String // CHECK_IN, CHECK_OUT, EDIT_TIME, DELETE, CANCEL_CHECKOUT
+  oldValue           Json? // Previous value in JSON format
+  newValue           Json? // New value in JSON format
+  ipAddress          String?
+  userAgent          String?
+  timestamp          BigInt // Unix timestamp in seconds
+  reason             String? // Edit reason (optional)
+  createdAt          DateTime          @default(now())
+
+  @@index([userId])
+  @@index([attendanceRecordId])
+  @@index([action])
+  @@index([timestamp])
+}
+
+model TimeCorrection {
+  id                 String           @id @default(cuid())
+  attendanceRecordId String
+  attendanceRecord   AttendanceRecord @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+  userId             String
+  fieldName          String // checkInTime, checkOutTime
+  beforeValue        BigInt // Unix timestamp before edit
+  afterValue         BigInt // Unix timestamp after edit
+  reason             String
+  approvalStatus     String           @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy         String?
+  approvedAt         BigInt? // Unix timestamp
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([attendanceRecordId])
+  @@index([userId])
+  @@index([approvalStatus])
+}
+
+model TimerEvent {
+  id                   String           @id @default(cuid())
+  userId               String
+  attendanceRecordId   String
+  attendanceRecord     AttendanceRecord @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+  eventType            String // WORK, REST, END
+  timestamp            BigInt // Unix timestamp in seconds
+  durationFromPrevious Int? // Duration in seconds from previous event
+  endTimestamp         BigInt? // Unix timestamp when this event ended (for WORK events)
+  memo                 String? // User memo, max 500 characters
+  notes                String? // System notes
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([attendanceRecordId])
+  @@index([timestamp])
+  @@index([eventType])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
