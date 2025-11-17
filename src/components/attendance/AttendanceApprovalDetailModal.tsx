@@ -127,11 +127,11 @@ export function AttendanceApprovalDetailModal({
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || '承認処理に失敗しました')
+        throw new Error(errorData.error || 'Approval process failed')
       }
 
       const result = await response.json()
-      setSuccessMessage(result.message || '勤怠記録を承認しました')
+      setSuccessMessage(result.message || 'Attendance record approved')
 
       // Wait a moment to show success message
       setTimeout(() => {
@@ -141,7 +141,7 @@ export function AttendanceApprovalDetailModal({
         setSuccessMessage(null)
       }, 1500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '承認処理に失敗しました')
+      setError(err instanceof Error ? err.message : 'Approval process failed')
     } finally {
       setIsApproving(false)
     }
@@ -169,11 +169,11 @@ export function AttendanceApprovalDetailModal({
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || '却下処理に失敗しました')
+        throw new Error(errorData.error || 'Rejection process failed')
       }
 
       const result = await response.json()
-      setSuccessMessage(result.message || '勤怠記録を却下しました')
+      setSuccessMessage(result.message || 'Attendance record rejected')
 
       // Wait a moment to show success message
       setTimeout(() => {
@@ -182,7 +182,7 @@ export function AttendanceApprovalDetailModal({
         setSuccessMessage(null)
       }, 1500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '却下処理に失敗しました')
+      setError(err instanceof Error ? err.message : 'Rejection process failed')
       throw err // Re-throw to let RejectDialog handle it
     } finally {
       setIsRejecting(false)
@@ -215,9 +215,9 @@ export function AttendanceApprovalDetailModal({
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  勤怠承認詳細
-                </h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Attendance Approval Details
+              </h2>
                 <p className="text-sm text-gray-600 mt-1">
                   {formatDate(attendance.date)}
                 </p>
@@ -253,11 +253,11 @@ export function AttendanceApprovalDetailModal({
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
                 <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  基本情報
+                  Basic Information
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">従業員</p>
+                    <p className="text-xs text-gray-600 mb-1">Employee</p>
                     <p className="text-sm font-medium text-gray-900">
                       {employeeName}
                     </p>
@@ -266,13 +266,13 @@ export function AttendanceApprovalDetailModal({
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">部門</p>
+                    <p className="text-xs text-gray-600 mb-1">Department</p>
                     <p className="text-sm font-medium text-gray-900">
                       {attendance.employee.department}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">日付</p>
+                    <p className="text-xs text-gray-600 mb-1">Date</p>
                     <p className="text-sm font-medium text-gray-900">
                       {formatDate(attendance.date)}
                     </p>
@@ -285,7 +285,7 @@ export function AttendanceApprovalDetailModal({
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-green-600" />
-                    <p className="text-xs text-gray-600">出勤時刻</p>
+                    <p className="text-xs text-gray-600">Clock In</p>
                   </div>
                   <p className="text-xl font-bold text-gray-900">
                     {formatTime(attendance.clockInTime)}
@@ -294,7 +294,7 @@ export function AttendanceApprovalDetailModal({
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-red-600" />
-                    <p className="text-xs text-gray-600">退勤時刻</p>
+                    <p className="text-xs text-gray-600">Clock Out</p>
                   </div>
                   <p className="text-xl font-bold text-gray-900">
                     {formatTime(attendance.clockOutTime)}
@@ -303,7 +303,7 @@ export function AttendanceApprovalDetailModal({
                 <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-blue-600" />
-                    <p className="text-xs text-gray-600">労働時間</p>
+                    <p className="text-xs text-gray-600">Work Hours</p>
                   </div>
                   <p className="text-xl font-bold text-blue-700">
                     {formatWorkHours(attendance.totalWorkMinutes)}
@@ -312,7 +312,7 @@ export function AttendanceApprovalDetailModal({
                 <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-gray-600" />
-                    <p className="text-xs text-gray-600">休憩時間</p>
+                    <p className="text-xs text-gray-600">Break Time</p>
                   </div>
                   <p className="text-xl font-bold text-gray-700">
                     {formatWorkHours(attendance.totalBreakMinutes)}
@@ -331,7 +331,7 @@ export function AttendanceApprovalDetailModal({
                         : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                     }`}
                   >
-                    タイムライン
+                    Timeline
                   </button>
                   <button
                     onClick={() => setActiveTab('logs')}
@@ -341,7 +341,7 @@ export function AttendanceApprovalDetailModal({
                         : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                     }`}
                   >
-                    操作ログ
+                    Operation Log
                   </button>
                 </div>
               </div>
@@ -363,12 +363,12 @@ export function AttendanceApprovalDetailModal({
               {attendance.approvalStatus === 'PENDING' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    承認コメント（任意）
+                    Approval Comment (Optional)
                   </label>
                   <textarea
                     value={approvalComment}
                     onChange={(e) => setApprovalComment(e.target.value)}
-                    placeholder="承認時のコメントを入力してください（任意）"
+                    placeholder="Enter comment for approval (optional)"
                     rows={3}
                     maxLength={500}
                     disabled={isApproving || isRejecting}
@@ -388,7 +388,7 @@ export function AttendanceApprovalDetailModal({
                 disabled={isApproving || isRejecting}
                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                キャンセル
+                Cancel
               </button>
 
               {attendance.approvalStatus === 'PENDING' && (
@@ -399,7 +399,7 @@ export function AttendanceApprovalDetailModal({
                     className="flex items-center gap-2 px-4 py-2 text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <XCircle className="w-4 h-4" />
-                    却下
+                    Reject
                   </button>
                   <button
                     onClick={handleApprove}
@@ -409,12 +409,12 @@ export function AttendanceApprovalDetailModal({
                     {isApproving ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        承認中...
+                        Approving...
                       </>
                     ) : (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
-                        承認する
+                        Approve
                       </>
                     )}
                   </button>
@@ -424,14 +424,14 @@ export function AttendanceApprovalDetailModal({
               {attendance.approvalStatus === 'APPROVED' && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg">
                   <CheckCircle2 className="w-5 h-5" />
-                  <span className="font-medium">承認済み</span>
+                  <span className="font-medium">Approved</span>
                 </div>
               )}
 
               {attendance.approvalStatus === 'REJECTED' && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg">
                   <XCircle className="w-5 h-5" />
-                  <span className="font-medium">却下済み</span>
+                  <span className="font-medium">Rejected</span>
                 </div>
               )}
             </div>

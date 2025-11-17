@@ -9,7 +9,7 @@ interface NotificationSettingsProps {
   onSave: (data: NotificationSettingsInput) => Promise<void>
 }
 
-const DAYS = ['日', '月', '火', '水', '木', '金', '土']
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export function NotificationSettings({ initialData, onSave }: NotificationSettingsProps) {
   const [formData, setFormData] = useState<NotificationSettingsInput>(
@@ -47,7 +47,7 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
 
     try {
       await onSave(formData)
-      setSuccessMessage('通知設定を保存しました')
+      setSuccessMessage('Notification settings saved')
     } catch (error) {
       if (error && typeof error === 'object' && 'errors' in error) {
         setErrors(error.errors as Partial<Record<keyof NotificationSettingsInput, string>>)
@@ -61,13 +61,13 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-3 mb-6">
         <Bell className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-semibold text-gray-900">通知設定</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">Notification Settings</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email Notifications */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">通知タイプ</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Notification Types</h3>
 
           <div className="space-y-3">
             <div className="flex items-start">
@@ -80,10 +80,10 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
               />
               <div className="ml-3">
                 <label htmlFor="emailNotifications" className="block text-sm font-medium text-gray-700">
-                  メール通知を有効にする
+                  Enable email notifications
                 </label>
                 <p className="text-xs text-gray-500 mt-1">
-                  重要なイベントやアラートをメールで受け取ります
+                  Receive important events and alerts via email
                 </p>
               </div>
             </div>
@@ -98,10 +98,10 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
               />
               <div className="ml-3">
                 <label htmlFor="attendanceReminders" className="block text-sm font-medium text-gray-700">
-                  勤怠リマインダー
+                  Attendance reminders
                 </label>
                 <p className="text-xs text-gray-500 mt-1">
-                  出勤・退勤忘れの通知を受け取ります
+                  Receive notifications for missed clock-in/clock-out
                 </p>
               </div>
             </div>
@@ -116,10 +116,10 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
               />
               <div className="ml-3">
                 <label htmlFor="payrollAlerts" className="block text-sm font-medium text-gray-700">
-                  給与アラート
+                  Payroll alerts
                 </label>
                 <p className="text-xs text-gray-500 mt-1">
-                  給与処理や支払いに関する通知を受け取ります
+                  Receive notifications about payroll processing and payments
                 </p>
               </div>
             </div>
@@ -134,10 +134,10 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
               />
               <div className="ml-3">
                 <label htmlFor="systemUpdates" className="block text-sm font-medium text-gray-700">
-                  システム更新通知
+                  System update notifications
                 </label>
                 <p className="text-xs text-gray-500 mt-1">
-                  新機能やメンテナンス情報を受け取ります
+                  Receive information about new features and maintenance
                 </p>
               </div>
             </div>
@@ -146,12 +146,12 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
 
         {/* Reminder Settings */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">リマインダー設定</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Reminder Settings</h3>
 
           <div className="space-y-4">
             <div>
               <label htmlFor="reminderTime" className="block text-sm font-medium text-gray-700 mb-2">
-                リマインダー送信時刻 <span className="text-red-500">*</span>
+                Reminder Time <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
@@ -169,7 +169,7 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                リマインダー送信曜日 <span className="text-red-500">*</span>
+                Reminder Days <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {DAYS.map((day, index) => (
@@ -191,7 +191,7 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
                 <p className="mt-1 text-sm text-red-600">{errors.reminderDays}</p>
               )}
               <p className="mt-2 text-xs text-gray-500">
-                選択した曜日にリマインダーが送信されます
+                Reminders will be sent on selected days
               </p>
             </div>
           </div>
@@ -212,7 +212,7 @@ export function NotificationSettings({ initialData, onSave }: NotificationSettin
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSubmitting ? '保存中...' : '保存'}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>

@@ -40,7 +40,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
 
     try {
       await onSave(formData)
-      setSuccessMessage('勤怠設定を保存しました')
+      setSuccessMessage('Attendance settings saved')
     } catch (error) {
       if (error && typeof error === 'object' && 'errors' in error) {
         setErrors(error.errors as Partial<Record<keyof AttendanceSettingsInput, string>>)
@@ -54,7 +54,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-3 mb-6">
         <Clock className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-semibold text-gray-900">勤怠設定</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">Attendance Settings</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -62,7 +62,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="workStartTime" className="block text-sm font-medium text-gray-700 mb-2">
-              勤務開始時刻 <span className="text-red-500">*</span>
+              Work Start Time <span className="text-red-500">*</span>
             </label>
             <input
               type="time"
@@ -80,7 +80,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
 
           <div>
             <label htmlFor="workEndTime" className="block text-sm font-medium text-gray-700 mb-2">
-              勤務終了時刻 <span className="text-red-500">*</span>
+              Work End Time <span className="text-red-500">*</span>
             </label>
             <input
               type="time"
@@ -98,7 +98,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
         {/* Break Duration */}
         <div>
           <label htmlFor="breakDuration" className="block text-sm font-medium text-gray-700 mb-2">
-            休憩時間（分） <span className="text-red-500">*</span>
+            Break Duration (minutes) <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -114,12 +114,12 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
           {errors.breakDuration && (
             <p className="mt-1 text-sm text-red-600">{errors.breakDuration}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">標準の休憩時間を分単位で設定してください</p>
+          <p className="mt-1 text-xs text-gray-500">Set standard break time in minutes</p>
         </div>
 
         {/* Overtime Settings */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">残業設定</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Overtime Settings</h3>
 
           <div className="space-y-4">
             <div className="flex items-center">
@@ -131,7 +131,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="overtimeEnabled" className="ml-2 block text-sm text-gray-700">
-                残業を有効にする
+                Enable overtime
               </label>
             </div>
 
@@ -139,7 +139,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
                 <div>
                   <label htmlFor="overtimeRate" className="block text-sm font-medium text-gray-700 mb-2">
-                    残業割増率 <span className="text-red-500">*</span>
+                    Overtime Rate <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -156,12 +156,12 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
                   {errors.overtimeRate && (
                     <p className="mt-1 text-sm text-red-600">{errors.overtimeRate}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">例: 1.25 = 125%</p>
+                  <p className="mt-1 text-xs text-gray-500">e.g., 1.25 = 125%</p>
                 </div>
 
                 <div>
                   <label htmlFor="weekendRate" className="block text-sm font-medium text-gray-700 mb-2">
-                    休日出勤割増率 <span className="text-red-500">*</span>
+                    Weekend Work Rate <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -187,7 +187,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
 
         {/* Auto Checkout */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">自動退勤設定</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Auto Clock-Out Settings</h3>
 
           <div className="space-y-4">
             <div className="flex items-center">
@@ -199,7 +199,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="autoCheckout" className="ml-2 block text-sm text-gray-700">
-                自動退勤を有効にする
+                Enable auto clock-out
               </label>
             </div>
 
@@ -209,7 +209,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
                   htmlFor="autoCheckoutTime"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  自動退勤時刻
+                  Auto Clock-Out Time
                 </label>
                 <input
                   type="time"
@@ -224,7 +224,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
                   <p className="mt-1 text-sm text-red-600">{errors.autoCheckoutTime}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
-                  この時刻になると自動的に退勤処理が行われます
+                  Clock-out will be processed automatically at this time
                 </p>
               </div>
             )}
@@ -246,7 +246,7 @@ export function AttendanceSettings({ initialData, onSave }: AttendanceSettingsPr
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSubmitting ? '保存中...' : '保存'}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>

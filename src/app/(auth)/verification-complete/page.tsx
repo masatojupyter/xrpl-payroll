@@ -44,7 +44,7 @@ export default function VerificationCompletePage() {
             <div className="h-1 w-full bg-gradient-to-r from-purple-600 to-green-600 rounded-full"></div>
           </div>
           <p className="mt-4 text-gray-600 text-sm">
-            給与支払いシステムへようこそ
+            Welcome to the Payroll System
           </p>
         </div>
 
@@ -68,10 +68,10 @@ export default function VerificationCompletePage() {
               </svg>
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              登録完了！
+              Registration Complete!
             </h2>
             <p className="text-gray-600 text-lg">
-              アカウントの設定が完了しました
+              Your account setup is complete
             </p>
           </div>
 
@@ -91,10 +91,10 @@ export default function VerificationCompletePage() {
               </svg>
               <div>
                 <h3 className="text-green-800 font-semibold text-sm mb-1">
-                  メール認証とパスワード設定が完了しました
+                  Email verification and password setup complete
                 </h3>
                 <p className="text-green-700 text-sm">
-                  ダッシュボードで給与管理を開始できます
+                  You can now start managing payroll from the dashboard
                 </p>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function VerificationCompletePage() {
                 />
               </svg>
               <p className="text-purple-700 text-sm font-medium">
-                <span className="font-bold text-lg">{countdown}</span>秒後に自動的にダッシュボードへ移動します
+                Redirecting to dashboard in <span className="font-bold text-lg">{countdown}</span> seconds
               </p>
             </div>
             {/* Progress Bar */}
@@ -147,7 +147,7 @@ export default function VerificationCompletePage() {
                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                   />
                 </svg>
-                ダッシュボードへ移動
+                Go to Dashboard
               </span>
             </button>
           </Link>
@@ -155,7 +155,7 @@ export default function VerificationCompletePage() {
           {/* Features Info */}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <h3 className="text-sm font-semibold text-gray-700 mb-3 text-center">
-              これからできること
+              What You Can Do
             </h3>
             <ul className="space-y-2 text-sm text-gray-600">
               <li className="flex items-start">
@@ -170,7 +170,7 @@ export default function VerificationCompletePage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>従業員の給与情報を管理</span>
+                <span>Manage employee payroll information</span>
               </li>
               <li className="flex items-start">
                 <svg
@@ -184,7 +184,7 @@ export default function VerificationCompletePage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>XRPで給与を支払い</span>
+                <span>Pay salaries with XRP</span>
               </li>
               <li className="flex items-start">
                 <svg
@@ -198,7 +198,7 @@ export default function VerificationCompletePage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>取引履歴をリアルタイムで確認</span>
+                <span>Check transaction history in real-time</span>
               </li>
               <li className="flex items-start">
                 <svg
@@ -212,7 +212,7 @@ export default function VerificationCompletePage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>ブロックチェーン技術で安全に管理</span>
+                <span>Secure management with blockchain technology</span>
               </li>
             </ul>
           </div>
@@ -220,7 +220,7 @@ export default function VerificationCompletePage() {
 
         {/* Bottom Info */}
         <p className="mt-8 text-center text-xs text-gray-500">
-          このシステムは XRP Ledger のブロックチェーン技術を使用しています
+          This system uses XRP Ledger blockchain technology
         </p>
       </div>
     </div>

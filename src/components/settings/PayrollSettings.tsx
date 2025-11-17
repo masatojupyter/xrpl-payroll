@@ -39,7 +39,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
 
     try {
       await onSave(formData)
-      setSuccessMessage('給与設定を保存しました')
+      setSuccessMessage('Payroll settings saved')
     } catch (error) {
       if (error && typeof error === 'object' && 'errors' in error) {
         setErrors(error.errors as Partial<Record<keyof PayrollSettingsInput, string>>)
@@ -53,7 +53,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-3 mb-6">
         <DollarSign className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-semibold text-gray-900">給与設定</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">Payroll Settings</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -61,7 +61,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
-              支払通貨 <span className="text-red-500">*</span>
+              Payment Currency <span className="text-red-500">*</span>
             </label>
             <select
               id="currency"
@@ -79,7 +79,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
 
           <div>
             <label htmlFor="paymentDay" className="block text-sm font-medium text-gray-700 mb-2">
-              支払日（毎月） <span className="text-red-500">*</span>
+              Payment Day (Monthly) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -93,7 +93,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
               }`}
             />
             {errors.paymentDay && <p className="mt-1 text-sm text-red-600">{errors.paymentDay}</p>}
-            <p className="mt-1 text-xs text-gray-500">1〜28日の範囲で設定してください</p>
+            <p className="mt-1 text-xs text-gray-500">Set within the range of 1-28</p>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="taxRate" className="block text-sm font-medium text-gray-700 mb-2">
-              所得税率（%） <span className="text-red-500">*</span>
+              Income Tax Rate (%) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -123,7 +123,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
               htmlFor="socialInsuranceRate"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              社会保険料率（%） <span className="text-red-500">*</span>
+              Social Insurance Rate (%) <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -149,7 +149,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
             htmlFor="xrpWalletAddress"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            会社XRPウォレットアドレス <span className="text-red-500">*</span>
+            Company XRP Wallet Address <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -164,13 +164,13 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
           {errors.xrpWalletAddress && (
             <p className="mt-1 text-sm text-red-600">{errors.xrpWalletAddress}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">給与支払いに使用するウォレットアドレス</p>
+          <p className="mt-1 text-xs text-gray-500">Wallet address used for payroll payments</p>
         </div>
 
         {/* Minimum Payment */}
         <div>
           <label htmlFor="minimumPayment" className="block text-sm font-medium text-gray-700 mb-2">
-            最低支払額 <span className="text-red-500">*</span>
+            Minimum Payment <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -187,7 +187,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
             <p className="mt-1 text-sm text-red-600">{errors.minimumPayment}</p>
           )}
           <p className="mt-1 text-xs text-gray-500">
-            この金額未満の給与は次回に繰り越されます
+            Payments below this amount will be carried over to the next period
           </p>
         </div>
 
@@ -201,20 +201,20 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
               onChange={(e) => handleChange('autoPayment', e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="autoPayment" className="ml-2 block text-sm text-gray-700">
-              自動支払いを有効にする
-            </label>
+              <label htmlFor="autoPayment" className="ml-2 block text-sm text-gray-700">
+                Enable automatic payment
+              </label>
           </div>
           <p className="mt-2 text-xs text-gray-500 ml-6">
-            有効にすると、支払日に自動的に給与が支払われます
+            When enabled, payroll will be automatically paid on the payment day
           </p>
         </div>
 
         {/* Warning Message */}
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
           <p className="text-sm">
-            <strong>注意:</strong>{' '}
-            給与設定の変更は次回の給与計算から適用されます。既に計算済みの給与には影響しません。
+            <strong>Note:</strong>{' '}
+            Changes to payroll settings will be applied from the next payroll calculation. They will not affect payrolls that have already been calculated.
           </p>
         </div>
 
@@ -233,7 +233,7 @@ export function PayrollSettings({ initialData, onSave }: PayrollSettingsProps) {
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSubmitting ? '保存中...' : '保存'}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>

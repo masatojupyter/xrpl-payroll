@@ -10,16 +10,16 @@ const setPasswordSchema = z
   .object({
     password: z
       .string()
-      .min(8, 'パスワードは8文字以上で入力してください')
-      .max(100, 'パスワードは100文字以内で入力してください')
+      .min(8, 'Password must be at least 8 characters')
+      .max(100, 'Password must be no more than 100 characters')
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'パスワードは大文字、小文字、数字をそれぞれ1文字以上含む必要があります'
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       ),
-    confirmPassword: z.string().min(1, 'パスワード確認は必須です'),
+    confirmPassword: z.string().min(1, 'Password confirmation is required'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'パスワードが一致しません',
+    message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
 
@@ -35,7 +35,7 @@ function SetPasswordForm() {
     score: number;
     label: string;
     color: string;
-  }>({ score: 0, label: '未入力', color: 'bg-gray-300' });
+  }>({ score: 0, label: 'Not entered', color: 'bg-gray-300' });
 
   const {
     register,
@@ -55,7 +55,7 @@ function SetPasswordForm() {
   useEffect(() => {
     const tokenParam = searchParams.get('token');
     if (!tokenParam) {
-      setError('トークンが見つかりません。登録メールのリンクから再度アクセスしてください。');
+      setError('Token not found. Please access again from the link in your registration email.');
     } else {
       setToken(tokenParam);
     }
@@ -66,7 +66,7 @@ function SetPasswordForm() {
       const strength = calculatePasswordStrength(password);
       setPasswordStrength(strength);
     } else {
-      setPasswordStrength({ score: 0, label: '未入力', color: 'bg-gray-300' });
+      setPasswordStrength({ score: 0, label: 'Not entered', color: 'bg-gray-300' });
     }
   }, [password]);
 
@@ -88,16 +88,16 @@ function SetPasswordForm() {
     if (/\d/.test(pwd)) score += 1;
     if (/[^a-zA-Z\d]/.test(pwd)) score += 1;
 
-    // スコアに応じたラベルと色
-    if (score <= 2) return { score, label: '弱い', color: 'bg-red-500' };
-    if (score <= 4) return { score, label: '普通', color: 'bg-yellow-500' };
-    if (score <= 6) return { score, label: '強い', color: 'bg-green-500' };
-    return { score, label: 'とても強い', color: 'bg-green-600' };
+    // Label and color based on score
+    if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500' };
+    if (score <= 4) return { score, label: 'Fair', color: 'bg-yellow-500' };
+    if (score <= 6) return { score, label: 'Strong', color: 'bg-green-500' };
+    return { score, label: 'Very Strong', color: 'bg-green-600' };
   };
 
   const onSubmit = async (data: SetPasswordFormData) => {
     if (!token) {
-      setError('トークンが見つかりません');
+      setError('Token not found');
       return;
     }
 
@@ -120,17 +120,17 @@ function SetPasswordForm() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'パスワードの設定に失敗しました');
+        throw new Error(result.error || 'Failed to set password');
       }
 
-      // 成功時はログインページへリダイレクト
-      // UserかEmployeeかに応じたメッセージを付与
+      // Redirect to login page on success
+      // Add message based on User or Employee type
       const userType = result.type === 'employee' ? 'employee' : 'user';
       setTimeout(() => {
         router.push(`/login?message=password_set_success&type=${userType}`);
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '予期しないエラーが発生しました');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       setIsLoading(false);
     }
   };
@@ -163,7 +163,7 @@ function SetPasswordForm() {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">エラー</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
             </div>
 
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
@@ -174,7 +174,7 @@ function SetPasswordForm() {
               onClick={() => router.push('/register')}
               className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-green-600 hover:from-purple-700 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              登録ページへ戻る
+              Back to Registration
             </button>
           </div>
         </div>
@@ -194,17 +194,17 @@ function SetPasswordForm() {
             <div className="h-1 w-full bg-gradient-to-r from-purple-600 to-green-600 rounded-full"></div>
           </div>
           <p className="mt-4 text-gray-600 text-sm">
-            パスワード設定
+            Password Setup
           </p>
         </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-            パスワードを設定
+            Set Your Password
           </h2>
           <p className="text-gray-600 text-sm text-center mb-6">
-            アカウント利用開始のためにパスワードを設定してください
+            Please set a password to start using your account
           </p>
 
           {/* Error Message */}
@@ -224,7 +224,7 @@ function SetPasswordForm() {
                 </svg>
                 <div>
                   <h3 className="text-red-800 font-semibold text-sm mb-1">
-                    エラーが発生しました
+                    An error occurred
                   </h3>
                   <p className="text-red-700 text-sm">{error}</p>
                 </div>
@@ -258,10 +258,10 @@ function SetPasswordForm() {
                 </svg>
                 <div>
                   <h3 className="text-green-800 font-semibold text-sm mb-1">
-                    パスワードを設定しています...
+                    Setting password...
                   </h3>
                   <p className="text-green-700 text-sm">
-                    完了後、ログインページへ移動します
+                    You will be redirected to the login page upon completion
                   </p>
                 </div>
               </div>
@@ -275,7 +275,7 @@ function SetPasswordForm() {
                 htmlFor="password"
                 className="block text-sm font-semibold text-gray-700 mb-2"
               >
-                パスワード
+                Password
               </label>
               <input
                 {...register('password')}
@@ -288,7 +288,7 @@ function SetPasswordForm() {
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 bg-white hover:border-gray-400'
                 }`}
-                placeholder="8文字以上、大文字・小文字・数字を含む"
+                placeholder="At least 8 characters, including uppercase, lowercase, and numbers"
               />
               {errors.password && (
                 <p className="mt-2 text-sm text-red-600 flex items-center">
@@ -311,7 +311,7 @@ function SetPasswordForm() {
               {password && !errors.password && (
                 <div className="mt-3">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs text-gray-600">パスワード強度:</span>
+                    <span className="text-xs text-gray-600">Password strength:</span>
                     <span className={`text-xs font-semibold ${
                       passwordStrength.score <= 2 ? 'text-red-600' :
                       passwordStrength.score <= 4 ? 'text-yellow-600' :
@@ -339,7 +339,7 @@ function SetPasswordForm() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      8文字以上
+                      At least 8 characters
                     </div>
                     <div className="flex items-center">
                       <svg
@@ -353,7 +353,7 @@ function SetPasswordForm() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      大文字を含む
+                      Contains uppercase
                     </div>
                     <div className="flex items-center">
                       <svg
@@ -367,7 +367,7 @@ function SetPasswordForm() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      小文字を含む
+                      Contains lowercase
                     </div>
                     <div className="flex items-center">
                       <svg
@@ -381,7 +381,7 @@ function SetPasswordForm() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      数字を含む
+                      Contains number
                     </div>
                   </div>
                 </div>
@@ -394,7 +394,7 @@ function SetPasswordForm() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-semibold text-gray-700 mb-2"
               >
-                パスワード確認
+                Confirm Password
               </label>
               <input
                 {...register('confirmPassword')}
@@ -407,7 +407,7 @@ function SetPasswordForm() {
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 bg-white hover:border-gray-400'
                 }`}
-                placeholder="パスワードを再入力"
+                placeholder="Re-enter password"
               />
               {errors.confirmPassword && (
                 <p className="mt-2 text-sm text-red-600 flex items-center">
@@ -455,10 +455,10 @@ function SetPasswordForm() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  設定中...
+                  Setting...
                 </span>
               ) : (
-                'パスワードを設定'
+                'Set Password'
               )}
             </button>
           </form>
@@ -466,7 +466,7 @@ function SetPasswordForm() {
 
         {/* Bottom Info */}
         <p className="mt-8 text-center text-xs text-gray-500">
-          このシステムは XRP Ledger のブロックチェーン技術を使用しています
+          This system uses XRP Ledger blockchain technology
         </p>
       </div>
     </div>

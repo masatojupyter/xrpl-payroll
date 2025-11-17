@@ -38,7 +38,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
 
     try {
       await onSave(formData)
-      setSuccessMessage('会社設定を保存しました')
+      setSuccessMessage('Company settings saved')
     } catch (error) {
       if (error && typeof error === 'object' && 'errors' in error) {
         setErrors(error.errors as Partial<Record<keyof CompanySettingsInput, string>>)
@@ -52,14 +52,14 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-3 mb-6">
         <Building2 className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-semibold text-gray-900">会社情報</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">Company Information</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Company Name */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            会社名 <span className="text-red-500">*</span>
+            Company Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -69,7 +69,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="株式会社サンプル"
+            placeholder="Sample Corporation"
           />
           {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
         </div>
@@ -77,7 +77,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
         {/* Address */}
         <div>
           <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-            住所 <span className="text-red-500">*</span>
+            Address <span className="text-red-500">*</span>
           </label>
           <textarea
             id="address"
@@ -87,7 +87,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.address ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="〒100-0001 東京都千代田区..."
+            placeholder="123 Main Street, City, State, ZIP"
           />
           {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
         </div>
@@ -96,7 +96,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-              電話番号 <span className="text-red-500">*</span>
+              Phone Number <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
@@ -106,14 +106,14 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                 errors.phone ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="03-1234-5678"
+              placeholder="+1-234-567-8900"
             />
             {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
           </div>
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              メールアドレス <span className="text-red-500">*</span>
+              Email Address <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
@@ -133,7 +133,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="taxId" className="block text-sm font-medium text-gray-700 mb-2">
-              法人番号
+              Tax ID
             </label>
             <input
               type="text"
@@ -147,7 +147,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
 
           <div>
             <label htmlFor="fiscalYearStart" className="block text-sm font-medium text-gray-700 mb-2">
-              会計年度開始日 <span className="text-red-500">*</span>
+              Fiscal Year Start <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -162,7 +162,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
             {errors.fiscalYearStart && (
               <p className="mt-1 text-sm text-red-600">{errors.fiscalYearStart}</p>
             )}
-            <p className="mt-1 text-xs text-gray-500">MM-DD形式で入力してください（例: 04-01）</p>
+            <p className="mt-1 text-xs text-gray-500">Enter in MM-DD format (e.g., 04-01)</p>
           </div>
         </div>
 
@@ -181,7 +181,7 @@ export function CompanySettings({ initialData, onSave }: CompanySettingsProps) {
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSubmitting ? '保存中...' : '保存'}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>

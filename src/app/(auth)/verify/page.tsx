@@ -15,7 +15,7 @@ function VerifyContent() {
       const token = searchParams.get('token');
 
       if (!token) {
-        setError('トークンが見つかりません');
+        setError('Token not found');
         setIsVerifying(false);
         return;
       }
@@ -32,16 +32,16 @@ function VerifyContent() {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || 'トークンの検証に失敗しました');
+          throw new Error(result.error || 'Token verification failed');
         }
 
-        // 検証成功 - パスワード設定ページへリダイレクト
+        // Verification successful - Redirect to password setup page
         setUserEmail(result.user.email);
         setTimeout(() => {
           router.push(`/set-password?token=${token}`);
         }, 2000);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '予期しないエラーが発生しました');
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
         setIsVerifying(false);
       }
     };
@@ -61,7 +61,7 @@ function VerifyContent() {
             <div className="h-1 w-full bg-gradient-to-r from-purple-600 to-green-600 rounded-full"></div>
           </div>
           <p className="mt-4 text-gray-600 text-sm">
-            メール検証
+            Email Verification
           </p>
         </div>
 
@@ -92,10 +92,10 @@ function VerifyContent() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                検証中...
+                Verifying...
               </h2>
               <p className="text-gray-600">
-                メールアドレスを検証しています。しばらくお待ちください。
+                Verifying your email address. Please wait.
               </p>
               {userEmail && (
                 <div className="mt-4 p-3 bg-purple-50 rounded-lg">
@@ -122,7 +122,7 @@ function VerifyContent() {
                   </svg>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  検証失敗
+                  Verification Failed
                 </h2>
               </div>
 
@@ -135,13 +135,13 @@ function VerifyContent() {
                   onClick={() => router.push('/register')}
                   className="w-full py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-green-600 hover:from-purple-700 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  登録ページへ戻る
+                  Back to Registration
                 </button>
                 <button
                   onClick={() => router.push('/login')}
                   className="w-full py-3 px-6 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
                 >
-                  ログインページへ
+                  Go to Login
                 </button>
               </div>
             </div>
@@ -161,10 +161,10 @@ function VerifyContent() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                検証成功
+                Verification Successful
               </h2>
               <p className="text-gray-600">
-                パスワード設定ページへ移動します...
+                Redirecting to password setup page...
               </p>
             </div>
           )}
@@ -172,7 +172,7 @@ function VerifyContent() {
 
         {/* Bottom Info */}
         <p className="mt-8 text-center text-xs text-gray-500">
-          このシステムは XRP Ledger のブロックチェーン技術を使用しています
+          This system uses XRP Ledger blockchain technology
         </p>
       </div>
     </div>
@@ -206,7 +206,7 @@ export default function VerifyPage() {
               ></path>
             </svg>
           </div>
-          <p className="text-gray-600">読み込み中...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     }>
