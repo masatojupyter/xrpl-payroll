@@ -147,7 +147,7 @@ export function validateWalletAddress(address: string): boolean {
 }
 
 /**
- * Connects to the XRP Testnet
+ * Connects to the XRP Testnet with retry mechanism
  * 
  * Establishes a WebSocket connection to the configured XRP Testnet endpoint.
  * The connection should be properly closed using disconnectFromTestnet after use.
@@ -179,22 +179,54 @@ export async function connectToTestnet(): Promise<Client> {
     const client = new Client(config.XRP_TESTNET_NETWORK)
     console.log('[connectToTestnet] ✓ Client instance created')
 
-    // Connect to the network
+    // Connect to the network with retries
     console.log('[connectToTestnet] Connecting to network...')
-    await client.connect()
-    console.log('[connectToTestnet] ✓ Connection attempt completed')
+    const maxRetries = 3
+    let retryCount = 0
+    let lastError: Error | null = null
 
-    // Verify connection is established
-    const isConnected = client.isConnected()
-    console.log('[connectToTestnet] Connection status:', isConnected)
-    
-    if (!isConnected) {
-      console.error('[connectToTestnet] ✗ Connection verification failed')
-      throw new Error('Failed to establish connection to XRP Testnet')
+    while (retryCount < maxRetries) {
+      try {
+        console.log(`[connectToTestnet] Connection attempt ${retryCount + 1}/${maxRetries}`)
+        await client.connect()
+        console.log('[connectToTestnet] ✓ Connection attempt completed')
+
+        // Wait a bit for the connection to fully establish
+        console.log('[connectToTestnet] Waiting for connection to stabilize...')
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Verify connection is established
+        const isConnected = client.isConnected()
+        console.log('[connectToTestnet] Connection status:', isConnected)
+        
+        if (!isConnected) {
+          throw new Error('Connection check failed after connect()')
+        }
+
+        // Test the connection with a simple request
+        console.log('[connectToTestnet] Testing connection with server_info request...')
+        await client.request({ command: 'server_info' })
+        console.log('[connectToTestnet] ✓ Connection test successful')
+
+        console.log('[connectToTestnet] ✓ Successfully connected to XRP Testnet')
+        return client
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown connection error')
+        console.error(`[connectToTestnet] ✗ Connection attempt ${retryCount + 1} failed:`, lastError.message)
+        
+        retryCount++
+        
+        if (retryCount < maxRetries) {
+          const waitTime = retryCount * 1000 // Exponential backoff: 1s, 2s, 3s
+          console.log(`[connectToTestnet] Waiting ${waitTime}ms before retry...`)
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
+      }
     }
 
-    console.log('[connectToTestnet] ✓ Successfully connected to XRP Testnet')
-    return client
+    // All retries failed
+    console.error('[connectToTestnet] ✗ All connection attempts failed')
+    throw new Error(`Failed to connect to XRP Testnet after ${maxRetries} attempts: ${lastError?.message}`)
   } catch (error) {
     console.error('[connectToTestnet] ✗ Connection failed:', error)
     if (error instanceof Error) {
@@ -320,239 +352,205 @@ export async function getWalletBalance(address: string): Promise<WalletBalance> 
 }
 
 /**
- * Sends an XRP payment from the configured wallet to a destination address
+ * Sends an XRP payment from the configured wallet to a destination address using JSON-RPC API
  * 
- * This function:
- * 1. Validates the destination address
- * 2. Creates and signs a payment transaction
- * 3. Submits the transaction to the ledger
- * 4. Waits for validation
- * 5. Returns the result with transaction details
+ * This function uses HTTP-based JSON-RPC instead of WebSocket to avoid compatibility issues
+ * in Next.js server environment.
  * 
  * @param params - Payment parameters including destination, amount, and optional memo
  * @returns Payment result with transaction hash or error
- * 
- * @example
- * ```typescript
- * const result = await sendXRPPayment({
- *   toAddress: 'r35a57RRmfyLGLD9XbCRPLogo3yikEGvMD',
- *   amountXRP: '10.5',
- *   memo: 'Salary payment',
- *   destinationTag: 12345
- * })
- * 
- * if (result.success) {
- *   console.log(`Payment successful: ${result.transactionHash}`)
- * } else {
- *   console.error(`Payment failed: ${result.error}`)
- * }
- * ```
  */
 export async function sendXRPPayment(params: SendXRPPaymentParams): Promise<PaymentResult> {
-  console.log('[sendXRPPayment] ========== Starting XRP Payment ==========')
+  console.log('[sendXRPPayment] ========== Starting XRP Payment (JSON-RPC) ==========')
   console.log('[sendXRPPayment] Payment params:', JSON.stringify(params, null, 2))
-  
-  let client: Client | null = null
+
+  const apiUrl = 'https://s.altnet.rippletest.net:51234/'
 
   try {
     const { toAddress, amountXRP, memo, destinationTag } = params
-    console.log('[sendXRPPayment] To address:', toAddress)
-    console.log('[sendXRPPayment] Amount (XRP):', amountXRP)
-    console.log('[sendXRPPayment] Memo:', memo || 'none')
-    console.log('[sendXRPPayment] Destination tag:', destinationTag || 'none')
 
     // Validate destination address
-    console.log('[sendXRPPayment] Validating destination address...')
     if (!validateWalletAddress(toAddress)) {
-      console.error('[sendXRPPayment] ✗ Invalid destination address')
-      return {
-        success: false,
-        error: 'Invalid destination wallet address'
-      }
+      return { success: false, error: 'Invalid destination wallet address' }
     }
-    console.log('[sendXRPPayment] ✓ Destination address validated')
 
     // Validate amount
-    console.log('[sendXRPPayment] Validating amount...')
     const amount = parseFloat(amountXRP)
-    console.log('[sendXRPPayment] Parsed amount:', amount)
-    
     if (isNaN(amount) || amount <= 0) {
-      console.error('[sendXRPPayment] ✗ Invalid amount:', amount)
-      return {
-        success: false,
-        error: 'Invalid amount: must be a positive number'
-      }
+      return { success: false, error: 'Invalid amount: must be a positive number' }
     }
-    console.log('[sendXRPPayment] ✓ Amount validated')
 
     // Get environment config
-    console.log('[sendXRPPayment] Getting environment config...')
     const config = getEnvConfig()
-    console.log('[sendXRPPayment] ✓ Environment config loaded')
-
-    // Connect to testnet
-    console.log('[sendXRPPayment] Connecting to testnet...')
-    client = await connectToTestnet()
-    console.log('[sendXRPPayment] ✓ Connected to testnet')
 
     // Create wallet from secret
-    console.log('[sendXRPPayment] Creating wallet from secret...')
-    const wallet = Wallet.fromSecret(config.XRP_TESTNET_WALLET_SECRET) 
-    console.log('[sendXRPPayment] ✓ Wallet created')
+    const wallet = Wallet.fromSecret(config.XRP_TESTNET_WALLET_SECRET)
     console.log('[sendXRPPayment] Wallet address:', wallet.address)
 
     // Verify wallet address matches config
-    console.log('[sendXRPPayment] Verifying wallet address matches config...')
-    console.log('[sendXRPPayment] Expected:', config.XRP_TESTNET_WALLET_ADDRESS)
-    console.log('[sendXRPPayment] Actual:', wallet.address)
-    
     if (wallet.address !== config.XRP_TESTNET_WALLET_ADDRESS) {
-      console.error('[sendXRPPayment] ✗ Wallet address mismatch!')
-      return {
-        success: false,
-        error: 'Wallet address mismatch: secret does not match configured address'
-      }
+      return { success: false, error: 'Wallet address mismatch' }
     }
-    console.log('[sendXRPPayment] ✓ Wallet address verified')
 
     // Check sender balance
-    console.log('[sendXRPPayment] Checking sender balance...')
     const balanceResult = await getWalletBalance(wallet.address)
-    console.log('[sendXRPPayment] Balance result:', balanceResult)
-    
     if (balanceResult.error) {
-      console.error('[sendXRPPayment] ✗ Failed to check balance:', balanceResult.error)
-      return {
-        success: false,
-        error: `Failed to check sender balance: ${balanceResult.error}`
-      }
+      return { success: false, error: `Failed to check balance: ${balanceResult.error}` }
     }
 
     const senderBalance = parseFloat(balanceResult.balance)
-    console.log('[sendXRPPayment] Sender balance:', senderBalance, 'XRP')
-    console.log('[sendXRPPayment] Required amount:', amount, 'XRP')
-    
     if (senderBalance < amount) {
-      console.error('[sendXRPPayment] ✗ Insufficient balance')
       return {
         success: false,
         error: `Insufficient balance: available ${senderBalance} XRP, required ${amount} XRP`
       }
     }
-    console.log('[sendXRPPayment] ✓ Sufficient balance confirmed')
+
+    // Get account info for sequence number
+    console.log('[sendXRPPayment] Getting account sequence...')
+    const accountInfoResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'account_info',
+        params: [{ account: wallet.address, ledger_index: 'validated' }]
+      })
+    })
+
+    const accountInfo = await accountInfoResponse.json()
+    if (accountInfo.result?.error) {
+      return { success: false, error: `Failed to get account info: ${accountInfo.result.error}` }
+    }
+
+    const sequence = accountInfo.result.account_data.Sequence
+    console.log('[sendXRPPayment] Account sequence:', sequence)
+
+    // Get current fee
+    console.log('[sendXRPPayment] Getting server fee...')
+    const feeResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'fee',
+        params: [{}]
+      })
+    })
+
+    const feeInfo = await feeResponse.json()
+    const fee = feeInfo.result?.drops?.open_ledger_fee || '12'
+    console.log('[sendXRPPayment] Fee (drops):', fee)
 
     // Prepare payment transaction
-    console.log('[sendXRPPayment] Preparing payment transaction...')
     const amountInDrops = xrpToDrops(amountXRP)
-    console.log('[sendXRPPayment] Amount in drops:', amountInDrops)
-    
     const payment: {
       TransactionType: 'Payment'
       Account: string
-      Amount: string
       Destination: string
+      Amount: string
+      Fee: string
+      Sequence: number
       DestinationTag?: number
-      Memos?: Array<{
-        Memo: {
-          MemoData: string
-        }
-      }>
+      Memos?: Array<{ Memo: { MemoData: string } }>
     } = {
       TransactionType: 'Payment',
       Account: wallet.address,
-      Amount: amountInDrops,
       Destination: toAddress,
+      Amount: amountInDrops,
+      Fee: fee,
+      Sequence: sequence,
     }
 
-    // Add destination tag if provided
     if (destinationTag !== undefined) {
-      console.log('[sendXRPPayment] Adding destination tag:', destinationTag)
       payment.DestinationTag = destinationTag
     }
 
-    // Add memo if provided
     if (memo) {
-      // Convert memo to hex
-      console.log('[sendXRPPayment] Adding memo:', memo)
       const memoHex = Buffer.from(memo, 'utf8').toString('hex').toUpperCase()
-      console.log('[sendXRPPayment] Memo (hex):', memoHex)
-      payment.Memos = [
-        {
-          Memo: {
-            MemoData: memoHex
+      payment.Memos = [{ Memo: { MemoData: memoHex } }]
+    }
+
+    console.log('[sendXRPPayment] Transaction prepared:', JSON.stringify(payment, null, 2))
+
+    // Sign the transaction
+    console.log('[sendXRPPayment] Signing transaction...')
+    const { tx_blob, hash } = wallet.sign(payment)
+    console.log('[sendXRPPayment] Transaction signed, hash:', hash)
+
+    // Submit the transaction
+    console.log('[sendXRPPayment] Submitting transaction...')
+    const submitResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'submit',
+        params: [{ tx_blob }]
+      })
+    })
+
+    const submitResult = await submitResponse.json()
+    console.log('[sendXRPPayment] Submit response:', JSON.stringify(submitResult, null, 2))
+
+    if (submitResult.result?.error) {
+      return { success: false, error: `Submit failed: ${submitResult.result.error_message || submitResult.result.error}` }
+    }
+
+    const engineResult = submitResult.result?.engine_result
+    if (engineResult !== 'tesSUCCESS' && !engineResult?.startsWith('tes')) {
+      return { success: false, error: `Transaction failed: ${engineResult}` }
+    }
+
+    // Poll for transaction validation (max 20 attempts, 1 second each)
+    console.log('[sendXRPPayment] Polling for transaction validation...')
+    for (let i = 0; i < 20; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      const txResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: 'tx',
+          params: [{ transaction: hash, binary: false }]
+        })
+      })
+
+      const txResult = await txResponse.json()
+      
+      if (txResult.result?.validated === true) {
+        const meta = txResult.result.meta
+        if (meta?.TransactionResult === 'tesSUCCESS') {
+          console.log('[sendXRPPayment] ✓✓✓ Payment validated successfully! ✓✓✓')
+          return {
+            success: true,
+            transactionHash: hash,
+            ledgerIndex: txResult.result.ledger_index
+          }
+        } else {
+          return {
+            success: false,
+            error: `Transaction failed: ${meta?.TransactionResult || 'Unknown error'}`
           }
         }
-      ]
-    }
+      }
 
-    console.log('[sendXRPPayment] Payment transaction prepared:', JSON.stringify(payment, null, 2))
+      if (txResult.result?.error === 'txnNotFound') {
+        console.log(`[sendXRPPayment] Attempt ${i + 1}/20: Transaction not yet in ledger...`)
+        continue
+      }
 
-    // Submit transaction and wait for validation
-    console.log('[sendXRPPayment] Submitting transaction and waiting for validation...')
-    const response = await client.submitAndWait(payment, { wallet })
-    console.log('[sendXRPPayment] ✓ Transaction submitted')
-    console.log('[sendXRPPayment] Response:', JSON.stringify(response, null, 2))
-
-    // Check transaction result
-    const result = response.result
-    console.log('[sendXRPPayment] Checking transaction result...')
-    console.log('[sendXRPPayment] Result hash:', result.hash)
-    console.log('[sendXRPPayment] Result ledger_index:', result.ledger_index)
-    
-    if (result.meta && typeof result.meta === 'object' && 'TransactionResult' in result.meta) {
-      const txResult = result.meta.TransactionResult
-      console.log('[sendXRPPayment] Transaction result code:', txResult)
-      
-      if (txResult === 'tesSUCCESS') {
-        console.log('[sendXRPPayment] ✓✓✓ Payment successful! ✓✓✓')
-        return {
-          success: true,
-          transactionHash: result.hash,
-          ledgerIndex: result.ledger_index
-        }
-      } else {
-        console.error('[sendXRPPayment] ✗ Transaction failed with code:', txResult)
-        return {
-          success: false,
-          error: `Transaction failed with code: ${txResult}`
-        }
+      if (txResult.result?.error) {
+        return { success: false, error: `Transaction lookup failed: ${txResult.result.error}` }
       }
     }
 
-    console.error('[sendXRPPayment] ✗ Transaction result is unclear')
-    console.error('[sendXRPPayment] Meta:', result.meta)
-    return {
-      success: false,
-      error: 'Transaction result is unclear'
-    }
+    return { success: false, error: 'Transaction validation timeout after 20 seconds' }
+
   } catch (error) {
-    console.error('[sendXRPPayment] ✗✗✗ Exception caught! ✗✗✗')
-    console.error('[sendXRPPayment] Error:', error)
-    
-    if (error instanceof Error) {
-      console.error('[sendXRPPayment] Error name:', error.name)
-      console.error('[sendXRPPayment] Error message:', error.message)
-      console.error('[sendXRPPayment] Error stack:', error.stack)
-      return {
-        success: false,
-        error: `Payment failed: ${error.message}`
-      }
-    }
-    
-    console.error('[sendXRPPayment] Unknown error type')
+    console.error('[sendXRPPayment] ✗✗✗ Exception caught! ✗✗✗', error)
     return {
       success: false,
-      error: 'Payment failed: Unknown error'
+      error: error instanceof Error ? `Payment failed: ${error.message}` : 'Payment failed: Unknown error'
     }
   } finally {
-    // Always disconnect
-    console.log('[sendXRPPayment] Cleaning up...')
-    if (client) {
-      console.log('[sendXRPPayment] Disconnecting from testnet...')
-      await disconnectFromTestnet(client)
-      console.log('[sendXRPPayment] ✓ Disconnected')
-    }
     console.log('[sendXRPPayment] ========== Payment Process Complete ==========')
   }
 }
