@@ -53,7 +53,7 @@ export function AttendanceDetailModal({
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [memoText, setMemoText] = useState('');
   const [memoSaving, setMemoSaving] = useState(false);
-  const [memoSaved, setMemoSaved] = useState(false);
+  const [memoError, setMemoError] = useState<string | null>(null);
   const [editingTimeId, setEditingTimeId] = useState<string | null>(null);
   const [timeEditData, setTimeEditData] = useState({ 
     year: '', 
@@ -78,6 +78,61 @@ export function AttendanceDetailModal({
   const [isApproved, setIsApproved] = useState(false);
   
   const memoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Function to save memo
+  const saveMemo = async (eventId: string, memo: string) => {
+    console.log('💾 saveMemo: Starting memo save', { eventId, memo, memoLength: memo.length });
+    
+    setMemoSaving(true);
+    setMemoError(null);
+
+    try {
+      console.log('💾 saveMemo: Calling API...');
+      const response = await fetch(`/api/timer-events/${eventId}/memo`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ memo }),
+      });
+
+      console.log('💾 saveMemo: API response status:', response.status);
+      const data = await response.json();
+      console.log('💾 saveMemo: API response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save memo');
+      }
+
+      console.log('💾 saveMemo: Memo saved successfully');
+      
+      // Update the timer events list with the new memo
+      setTimerEvents(prev => {
+        const updated = prev.map(event => 
+          event.id === eventId 
+            ? { ...event, memo: memo || null }
+            : event
+        );
+        console.log('💾 saveMemo: Updated timer events', { updated });
+        return updated;
+      });
+
+      // Clear editing state
+      setEditingMemoId(null);
+      setMemoText('');
+      
+      console.log('💾 saveMemo: Save completed successfully');
+    } catch (error) {
+      console.error('💾 saveMemo: Error saving memo:', error);
+      setMemoError(error instanceof Error ? error.message : 'Failed to save memo');
+      
+      // Keep editing mode active on error
+      alert(`Failed to save memo: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setMemoSaving(false);
+      console.log('💾 saveMemo: Save operation finished');
+    }
+  };
 
   // Update timer events when attendance changes
   useEffect(() => {
@@ -579,17 +634,70 @@ export function AttendanceDetailModal({
                                 <div className="flex-1 relative">
                                   <textarea
                                     value={memoText}
-                                    onChange={(e) => setMemoText(e.target.value)}
-                                    onBlur={() => {
-                                      setEditingMemoId(null);
-                                      setMemoText('');
+                                    onChange={(e) => {
+                                      console.log('📝 Memo textarea: Text changed', { 
+                                        eventId: event.id, 
+                                        newText: e.target.value,
+                                        length: e.target.value.length 
+                                      });
+                                      setMemoText(e.target.value);
                                     }}
+                                    onBlur={async () => {
+                                      console.log('📝 Memo textarea: onBlur triggered', { 
+                                        eventId: event.id, 
+                                        memoText,
+                                        hasChanges: memoText !== event.memo 
+                                      });
+                                      
+                                      // Only save if memo has changed
+                                      if (memoText !== event.memo) {
+                                        console.log('📝 Memo textarea: Saving memo (changed from original)');
+                                        await saveMemo(event.id, memoText);
+                                      } else {
+                                        console.log('📝 Memo textarea: No changes, clearing edit state');
+                                        setEditingMemoId(null);
+                                        setMemoText('');
+                                      }
+                                    }}
+                                    onKeyDown={(e) => {
+                                      console.log('📝 Memo textarea: Key pressed', { key: e.key, eventId: event.id });
+                                      
+                                      // Save on Enter (without Shift)
+                                      if (e.key === 'Enter' && !e.shiftKey) {
+                                        console.log('📝 Memo textarea: Enter pressed, saving memo');
+                                        e.preventDefault();
+                                        saveMemo(event.id, memoText);
+                                      }
+                                      
+                                      // Cancel on Escape
+                                      if (e.key === 'Escape') {
+                                        console.log('📝 Memo textarea: Escape pressed, cancelling edit');
+                                        e.preventDefault();
+                                        setEditingMemoId(null);
+                                        setMemoText('');
+                                      }
+                                    }}
+                                    disabled={memoSaving}
                                     autoFocus
-                                    placeholder="Enter memo"
+                                    placeholder="Enter memo (Press Enter to save, Esc to cancel)"
                                     maxLength={500}
-                                    className="w-full px-2 py-1 text-xs border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                    rows={1}
+                                    className={`w-full px-2 py-1 text-xs border rounded focus:ring-2 focus:border-transparent resize-none ${
+                                      memoSaving 
+                                        ? 'border-gray-300 bg-gray-50 cursor-wait' 
+                                        : 'border-blue-300 focus:ring-blue-500'
+                                    }`}
+                                    rows={2}
                                   />
+                                  {memoSaving && (
+                                    <div className="absolute right-2 top-1 text-xs text-blue-600">
+                                      Saving...
+                                    </div>
+                                  )}
+                                  {memoError && (
+                                    <div className="absolute left-0 top-full mt-1 text-xs text-red-600">
+                                      {memoError}
+                                    </div>
+                                  )}
                                 </div>
                               ) : (
                                 <>
@@ -610,10 +718,21 @@ export function AttendanceDetailModal({
                                   });
                                   setEditingMemoId(event.id);
                                   setMemoText(event.memo || '');
+                                  setMemoError(null);
                                 }}
-                                disabled={isApproved}
-                                className={`flex-shrink-0 ${isApproved ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-gray-600'}`}
-                                title={isApproved ? 'Cannot edit - Already approved' : 'Edit memo'}
+                                disabled={isApproved || memoSaving}
+                                className={`flex-shrink-0 ${
+                                  isApproved || memoSaving 
+                                    ? 'text-gray-300 cursor-not-allowed' 
+                                    : 'text-gray-400 hover:text-gray-600'
+                                }`}
+                                title={
+                                  isApproved 
+                                    ? 'Cannot edit - Already approved' 
+                                    : memoSaving 
+                                    ? 'Saving...' 
+                                    : 'Edit memo'
+                                }
                               >
                                 <Edit2 className="w-3 h-3" />
                               </button>
