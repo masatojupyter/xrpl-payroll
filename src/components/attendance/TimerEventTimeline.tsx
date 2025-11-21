@@ -39,9 +39,9 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
     const minutes = Math.floor((seconds % 3600) / 60);
     
     if (hours > 0) {
-      return `${hours}時間${minutes}分`;
+      return `${hours}h ${minutes}m`;
     }
-    return `${minutes}分`;
+    return `${minutes}m`;
   };
 
   const getEventIcon = (eventType: string) => {
@@ -73,11 +73,11 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
   const getEventLabel = (eventType: string) => {
     switch (eventType) {
       case 'WORK':
-        return '勤務開始';
+        return 'Work Start';
       case 'REST':
-        return '休憩開始';
+        return 'Break Start';
       case 'END':
-        return '業務終了';
+        return 'Work End';
       default:
         return eventType;
     }
@@ -87,7 +87,7 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
     return (
       <div className="text-center py-8 text-gray-500">
         <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
-        <p>タイマーイベントがありません</p>
+        <p>No timer events</p>
       </div>
     );
   }
@@ -97,25 +97,25 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
       {/* Summary Stats */}
       {workStats && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">勤務時間サマリー</h4>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Work Time Summary</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-xs text-gray-600">総労働時間</p>
+              <p className="text-xs text-gray-600">Total Work Time</p>
               <p className="text-lg font-bold text-blue-700">{workStats.totalWorkHours}h</p>
-              <p className="text-xs text-gray-500">{workStats.totalWorkMinutes}分</p>
+              <p className="text-xs text-gray-500">{workStats.totalWorkMinutes} min</p>
             </div>
             <div>
-              <p className="text-xs text-gray-600">総休憩時間</p>
+              <p className="text-xs text-gray-600">Total Break Time</p>
               <p className="text-lg font-bold text-yellow-700">{workStats.totalRestHours}h</p>
-              <p className="text-xs text-gray-500">{workStats.totalRestMinutes}分</p>
+              <p className="text-xs text-gray-500">{workStats.totalRestMinutes} min</p>
             </div>
             <div>
-              <p className="text-xs text-gray-600">勤務回数</p>
-              <p className="text-lg font-bold text-green-700">{workStats.workPeriods}回</p>
+              <p className="text-xs text-gray-600">Work Periods</p>
+              <p className="text-lg font-bold text-green-700">{workStats.workPeriods}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-600">休憩回数</p>
-              <p className="text-lg font-bold text-orange-700">{workStats.restPeriods}回</p>
+              <p className="text-xs text-gray-600">Break Periods</p>
+              <p className="text-lg font-bold text-orange-700">{workStats.restPeriods}</p>
             </div>
           </div>
         </div>
@@ -143,7 +143,7 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
                     </div>
                     {event.durationFromPrevious !== null && event.durationFromPrevious > 0 && (
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">前のイベントから</p>
+                        <p className="text-xs text-gray-500">From previous event</p>
                         <p className="text-sm font-medium text-gray-700">
                           {formatDuration(event.durationFromPrevious)}
                         </p>
@@ -155,10 +155,10 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
                   {event.eventType === 'WORK' && event.endTimestamp && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
                       <p className="text-xs text-gray-600">
-                        終了: {formatTime(event.endTimestamp)}
+                        End: {formatTime(event.endTimestamp)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        稼働時間: {formatDuration(Number(event.endTimestamp) - Number(event.timestamp))}
+                        Duration: {formatDuration(Number(event.endTimestamp) - Number(event.timestamp))}
                       </p>
                     </div>
                   )}
@@ -169,7 +169,7 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
                       <div className="flex items-start gap-2">
                         <MessageSquare className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
-                          <p className="text-xs font-medium text-blue-900 mb-1">メモ</p>
+                          <p className="text-xs font-medium text-blue-900 mb-1">Memo</p>
                           <p className="text-sm text-gray-700">{event.memo}</p>
                         </div>
                       </div>
@@ -191,7 +191,7 @@ export function TimerEventTimeline({ events, workStats }: TimerEventTimelineProp
 
       {/* Footer info */}
       <div className="text-xs text-gray-500 text-center pt-4 border-t">
-        全{events.length}件のイベント
+        Total: {events.length} events
       </div>
     </div>
   );

@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     console.log('[CLAIM-PAYMENT] Fetching employee record for email:', session.user.email)
     const employee = await prisma.employee.findFirst({
       where: {
-        id: session.user.id || '',
+        email: session.user.email || '',
         isActive: true,
       },
       select: {

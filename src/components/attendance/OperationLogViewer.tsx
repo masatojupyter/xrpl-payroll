@@ -77,35 +77,35 @@ export function OperationLogViewer({ logs }: OperationLogViewerProps) {
 
   const getActionLabel = (action: string) => {
     const labels: Record<string, string> = {
-      CHECK_IN: '出勤',
-      CHECK_OUT: '退勤',
-      EDIT_TIME: '時刻修正',
-      DELETE: '削除',
-      BREAK_START: '休憩開始',
-      BREAK_END: '休憩終了',
-      CANCEL_CHECKOUT: '退勤取消',
-      WORK: '勤務開始',
-      REST: '休憩開始',
-      END: '業務終了',
+      CHECK_IN: 'Check In',
+      CHECK_OUT: 'Check Out',
+      EDIT_TIME: 'Edit Time',
+      DELETE: 'Delete',
+      BREAK_START: 'Break Start',
+      BREAK_END: 'Break End',
+      CANCEL_CHECKOUT: 'Cancel Checkout',
+      WORK: 'Work Start',
+      REST: 'Break Start',
+      END: 'Work End',
     };
     return labels[action] || action;
   };
 
   const getBrowserName = (userAgent: string | null) => {
-    if (!userAgent) return '不明';
+    if (!userAgent) return 'Unknown';
     
     if (userAgent.includes('Chrome')) return 'Chrome';
     if (userAgent.includes('Firefox')) return 'Firefox';
     if (userAgent.includes('Safari')) return 'Safari';
     if (userAgent.includes('Edge')) return 'Edge';
-    return 'その他';
+    return 'Other';
   };
 
   const getDeviceType = (userAgent: string | null) => {
-    if (!userAgent) return '不明';
+    if (!userAgent) return 'Unknown';
     
-    if (userAgent.includes('Mobile')) return 'モバイル';
-    if (userAgent.includes('Tablet')) return 'タブレット';
+    if (userAgent.includes('Mobile')) return 'Mobile';
+    if (userAgent.includes('Tablet')) return 'Tablet';
     return 'PC';
   };
 
@@ -116,7 +116,7 @@ export function OperationLogViewer({ logs }: OperationLogViewerProps) {
       <div className="mt-2 space-y-1">
         {oldValue && (
           <div className="text-xs">
-            <span className="text-gray-500">変更前: </span>
+            <span className="text-gray-500">Before: </span>
             <code className="bg-red-50 text-red-700 px-2 py-0.5 rounded">
               {JSON.stringify(oldValue)}
             </code>
@@ -124,7 +124,7 @@ export function OperationLogViewer({ logs }: OperationLogViewerProps) {
         )}
         {newValue && (
           <div className="text-xs">
-            <span className="text-gray-500">変更後: </span>
+            <span className="text-gray-500">After: </span>
             <code className="bg-green-50 text-green-700 px-2 py-0.5 rounded">
               {JSON.stringify(newValue)}
             </code>
@@ -138,7 +138,7 @@ export function OperationLogViewer({ logs }: OperationLogViewerProps) {
     return (
       <div className="text-center py-8 text-gray-500">
         <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
-        <p>操作ログがありません</p>
+        <p>No operation logs</p>
       </div>
     );
   }
@@ -148,9 +148,9 @@ export function OperationLogViewer({ logs }: OperationLogViewerProps) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
           <Activity className="w-4 h-4" />
-          操作履歴
+          Operation History
         </h3>
-        <span className="text-xs text-gray-500">全{logs.length}件</span>
+        <span className="text-xs text-gray-500">Total: {logs.length}</span>
       </div>
 
       <div className="space-y-2">
@@ -202,7 +202,7 @@ export function OperationLogViewer({ logs }: OperationLogViewerProps) {
             {/* Reason */}
             {log.reason && (
               <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-                <span className="font-medium text-gray-700">理由: </span>
+                <span className="font-medium text-gray-700">Reason: </span>
                 <span className="text-gray-600">{log.reason}</span>
               </div>
             )}

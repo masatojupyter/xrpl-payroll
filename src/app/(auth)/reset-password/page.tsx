@@ -11,14 +11,14 @@ const resetPasswordSchema = z
   .object({
     password: z
       .string()
-      .min(8, 'パスワードは8文字以上である必要があります')
-      .regex(/[A-Z]/, '少なくとも1つの大文字を含める必要があります')
-      .regex(/[a-z]/, '少なくとも1つの小文字を含める必要があります')
-      .regex(/[0-9]/, '少なくとも1つの数字を含める必要があります'),
-    confirmPassword: z.string().min(1, 'パスワードの確認を入力してください'),
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Must contain at least one number'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'パスワードが一致しません',
+    message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
 
@@ -47,13 +47,13 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setError('無効なリセットリンクです');
+      setError('Invalid reset link');
     }
   }, [token]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) {
-      setError('無効なリセットリンクです');
+      setError('Invalid reset link');
       return;
     }
 
@@ -75,7 +75,7 @@ function ResetPasswordForm() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'パスワードのリセットに失敗しました');
+        throw new Error(result.error || 'Failed to reset password');
       }
 
       setSuccess(true);
@@ -83,7 +83,7 @@ function ResetPasswordForm() {
         router.push('/login');
       }, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '予期しないエラーが発生しました');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -108,15 +108,15 @@ function ResetPasswordForm() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">無効なリンク</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Invalid Link</h2>
               <p className="text-gray-600 mb-6">
-                このパスワードリセットリンクは無効または期限切れです。
+                This password reset link is invalid or expired.
               </p>
               <Link
                 href="/forgot-password"
                 className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-green-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-green-700 transition-all"
               >
-                新しいリンクを取得
+                Get New Link
               </Link>
             </div>
           </div>
@@ -137,17 +137,17 @@ function ResetPasswordForm() {
             <div className="h-1 w-full bg-gradient-to-r from-purple-600 to-green-600 rounded-full"></div>
           </div>
           <p className="mt-4 text-gray-600 text-sm">
-            給与支払いシステムへようこそ
+            Welcome to the Payroll System
           </p>
         </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-            新しいパスワードを設定
+            Set New Password
           </h2>
           <p className="text-sm text-gray-600 text-center mb-6">
-            新しいパスワードを入力してください
+            Please enter your new password
           </p>
 
           {/* Success Message */}
@@ -167,10 +167,10 @@ function ResetPasswordForm() {
                 </svg>
                 <div>
                   <h3 className="text-green-800 font-semibold text-sm mb-1">
-                    パスワードがリセットされました
+                    Password Reset Successfully
                   </h3>
                   <p className="text-green-700 text-sm">
-                    ログインページにリダイレクトしています...
+                    Redirecting to login page...
                   </p>
                 </div>
               </div>
@@ -194,7 +194,7 @@ function ResetPasswordForm() {
                 </svg>
                 <div>
                   <h3 className="text-red-800 font-semibold text-sm mb-1">
-                    エラーが発生しました
+                    An Error Occurred
                   </h3>
                   <p className="text-red-700 text-sm">{error}</p>
                 </div>
@@ -210,7 +210,7 @@ function ResetPasswordForm() {
                   htmlFor="password"
                   className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                  新しいパスワード
+                  New Password
                 </label>
                 <input
                   {...register('password')}
@@ -249,7 +249,7 @@ function ResetPasswordForm() {
                   htmlFor="confirmPassword"
                   className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                  パスワード（確認）
+                  Confirm Password
                 </label>
                 <input
                   {...register('confirmPassword')}
@@ -285,32 +285,32 @@ function ResetPasswordForm() {
               {/* Password Requirements */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-sm font-semibold text-gray-700 mb-2">
-                  パスワードの要件：
+                  Password Requirements:
                 </p>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li className="flex items-center">
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    8文字以上
+                    At least 8 characters
                   </li>
                   <li className="flex items-center">
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    大文字を含む
+                    Contains uppercase letter
                   </li>
                   <li className="flex items-center">
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    小文字を含む
+                    Contains lowercase letter
                   </li>
                   <li className="flex items-center">
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    数字を含む
+                    Contains number
                   </li>
                 </ul>
               </div>
@@ -343,10 +343,10 @@ function ResetPasswordForm() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    パスワードをリセット中...
+                    Resetting password...
                   </span>
                 ) : (
-                  'パスワードをリセット'
+                  'Reset Password'
                 )}
               </button>
             </form>
@@ -359,7 +359,7 @@ function ResetPasswordForm() {
                 href="/login"
                 className="text-purple-600 hover:text-purple-700 font-semibold underline"
               >
-                ログインページに戻る
+                Back to Login
               </Link>
             </p>
           </div>
@@ -367,7 +367,7 @@ function ResetPasswordForm() {
 
         {/* Bottom Info */}
         <p className="mt-8 text-center text-xs text-gray-500">
-          このシステムは XRP Ledger のブロックチェーン技術を使用しています
+          This system uses XRP Ledger blockchain technology
         </p>
       </div>
     </div>
