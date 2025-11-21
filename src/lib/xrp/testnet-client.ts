@@ -81,16 +81,26 @@ export interface WalletBalance {
  * @throws Error if required environment variables are missing or invalid
  */
 function getEnvConfig(): XRPEnvConfig {
+  console.log('[getEnvConfig] Starting environment config validation')
+  console.log('[getEnvConfig] XRP_TESTNET_WALLET_ADDRESS exists:', !!process.env.XRP_TESTNET_WALLET_ADDRESS)
+  console.log('[getEnvConfig] XRP_TESTNET_WALLET_SECRET exists:', !!process.env.XRP_TESTNET_WALLET_SECRET)
+  console.log('[getEnvConfig] XRP_TESTNET_NETWORK:', process.env.XRP_TESTNET_NETWORK || 'not set')
+  
   try {
     const config = envSchema.parse({
       XRP_TESTNET_WALLET_ADDRESS: process.env.XRP_TESTNET_WALLET_ADDRESS,
       XRP_TESTNET_WALLET_SECRET: process.env.XRP_TESTNET_WALLET_SECRET,
       XRP_TESTNET_NETWORK: process.env.XRP_TESTNET_NETWORK,
     })
+    console.log('[getEnvConfig] ✓ Environment config validated successfully')
+    console.log('[getEnvConfig] Network:', config.XRP_TESTNET_NETWORK)
+    console.log('[getEnvConfig] Wallet address:', config.XRP_TESTNET_WALLET_ADDRESS)
     return config
   } catch (error) {
+    console.error('[getEnvConfig] ✗ Validation failed:', error)
     if (error instanceof z.ZodError) {
       const missingVars = error.issues.map((e: z.ZodIssue) => e.path.join('.')).join(', ')
+      console.error('[getEnvConfig] Missing variables:', missingVars)
       throw new Error(`Missing or invalid environment variables: ${missingVars}`)
     }
     throw error
@@ -118,14 +128,20 @@ function getEnvConfig(): XRPEnvConfig {
  * ```
  */
 export function validateWalletAddress(address: string): boolean {
+  console.log('[validateWalletAddress] Validating address:', address)
+  
   if (!address || typeof address !== 'string') {
+    console.log('[validateWalletAddress] ✗ Invalid input - not a string or empty')
     return false
   }
 
   try {
     // Use xrpl library's validation which includes checksum verification
-    return isValidClassicAddress(address)
-  } catch {
+    const isValid = isValidClassicAddress(address)
+    console.log('[validateWalletAddress]', isValid ? '✓' : '✗', 'Address validation result:', isValid)
+    return isValid
+  } catch (error) {
+    console.error('[validateWalletAddress] ✗ Validation error:', error)
     return false
   }
 }
@@ -150,24 +166,40 @@ export function validateWalletAddress(address: string): boolean {
  * ```
  */
 export async function connectToTestnet(): Promise<Client> {
+  console.log('[connectToTestnet] Starting connection to XRP Testnet')
+  
   try {
     // Validate environment variables
+    console.log('[connectToTestnet] Validating environment variables...')
     const config = getEnvConfig()
+    console.log('[connectToTestnet] ✓ Environment variables validated')
 
     // Create client instance
+    console.log('[connectToTestnet] Creating client instance for network:', config.XRP_TESTNET_NETWORK)
     const client = new Client(config.XRP_TESTNET_NETWORK)
+    console.log('[connectToTestnet] ✓ Client instance created')
 
     // Connect to the network
+    console.log('[connectToTestnet] Connecting to network...')
     await client.connect()
+    console.log('[connectToTestnet] ✓ Connection attempt completed')
 
     // Verify connection is established
-    if (!client.isConnected()) {
+    const isConnected = client.isConnected()
+    console.log('[connectToTestnet] Connection status:', isConnected)
+    
+    if (!isConnected) {
+      console.error('[connectToTestnet] ✗ Connection verification failed')
       throw new Error('Failed to establish connection to XRP Testnet')
     }
 
+    console.log('[connectToTestnet] ✓ Successfully connected to XRP Testnet')
     return client
   } catch (error) {
+    console.error('[connectToTestnet] ✗ Connection failed:', error)
     if (error instanceof Error) {
+      console.error('[connectToTestnet] Error message:', error.message)
+      console.error('[connectToTestnet] Error stack:', error.stack)
       throw new Error(`Failed to connect to XRP Testnet: ${error.message}`)
     }
     throw new Error('Failed to connect to XRP Testnet: Unknown error')
@@ -192,31 +224,46 @@ export async function connectToTestnet(): Promise<Client> {
  * ```
  */
 export async function getWalletBalance(address: string): Promise<WalletBalance> {
+  console.log('[getWalletBalance] Starting balance retrieval for address:', address)
+  
   try {
     // Validate address format
+    console.log('[getWalletBalance] Validating address format...')
     if (!validateWalletAddress(address)) {
+      console.log('[getWalletBalance] ✗ Address validation failed')
       return {
         balance: '0',
         error: 'Invalid wallet address format'
       }
     }
+    console.log('[getWalletBalance] ✓ Address format validated')
 
     // Use JSON-RPC API instead of WebSocket
-    const response = await fetch('https://s.altnet.rippletest.net:51234/', {
+    const apiUrl = 'https://s.altnet.rippletest.net:51234/'
+    const requestBody = {
+      method: 'account_info',
+      params: [{
+        account: address,
+        ledger_index: 'validated'
+      }]
+    }
+    
+    console.log('[getWalletBalance] Sending request to:', apiUrl)
+    console.log('[getWalletBalance] Request body:', JSON.stringify(requestBody, null, 2))
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        method: 'account_info',
-        params: [{
-          account: address,
-          ledger_index: 'validated'
-        }]
-      })
+      body: JSON.stringify(requestBody)
     })
 
+    console.log('[getWalletBalance] Response status:', response.status)
+    console.log('[getWalletBalance] Response ok:', response.ok)
+    
     if (!response.ok) {
+      console.error('[getWalletBalance] ✗ HTTP error:', response.status)
       return {
         balance: '0',
         error: `HTTP error: ${response.status}`
@@ -224,15 +271,19 @@ export async function getWalletBalance(address: string): Promise<WalletBalance> 
     }
 
     const data = await response.json()
+    console.log('[getWalletBalance] Response data:', JSON.stringify(data, null, 2))
 
     // Check for errors in the response
     if (data.result?.error) {
+      console.error('[getWalletBalance] ✗ XRPL error:', data.result.error)
       if (data.result.error === 'actNotFound') {
+        console.log('[getWalletBalance] Account not found on ledger')
         return {
           balance: '0',
           error: 'Account not found on the ledger. The account may need to be funded first.'
         }
       }
+      console.error('[getWalletBalance] Error message:', data.result.error_message || data.result.error)
       return {
         balance: '0',
         error: `XRPL error: ${data.result.error_message || data.result.error}`
@@ -241,13 +292,20 @@ export async function getWalletBalance(address: string): Promise<WalletBalance> 
 
     // Convert drops to XRP
     const balanceInDrops = data.result.account_data.Balance
+    console.log('[getWalletBalance] Balance in drops:', balanceInDrops)
+    
     const balanceInXRP = dropsToXrp(String(balanceInDrops))
+    console.log('[getWalletBalance] Balance in XRP:', balanceInXRP)
+    console.log('[getWalletBalance] ✓ Successfully retrieved balance')
 
     return {
       balance: String(balanceInXRP)
     }
   } catch (error) {
+    console.error('[getWalletBalance] ✗ Exception caught:', error)
     if (error instanceof Error) {
+      console.error('[getWalletBalance] Error message:', error.message)
+      console.error('[getWalletBalance] Error stack:', error.stack)
       return {
         balance: '0',
         error: `Failed to retrieve balance: ${error.message}`
@@ -291,48 +349,80 @@ export async function getWalletBalance(address: string): Promise<WalletBalance> 
  * ```
  */
 export async function sendXRPPayment(params: SendXRPPaymentParams): Promise<PaymentResult> {
+  console.log('[sendXRPPayment] ========== Starting XRP Payment ==========')
+  console.log('[sendXRPPayment] Payment params:', JSON.stringify(params, null, 2))
+  
   let client: Client | null = null
 
   try {
     const { toAddress, amountXRP, memo, destinationTag } = params
+    console.log('[sendXRPPayment] To address:', toAddress)
+    console.log('[sendXRPPayment] Amount (XRP):', amountXRP)
+    console.log('[sendXRPPayment] Memo:', memo || 'none')
+    console.log('[sendXRPPayment] Destination tag:', destinationTag || 'none')
 
     // Validate destination address
+    console.log('[sendXRPPayment] Validating destination address...')
     if (!validateWalletAddress(toAddress)) {
+      console.error('[sendXRPPayment] ✗ Invalid destination address')
       return {
         success: false,
         error: 'Invalid destination wallet address'
       }
     }
+    console.log('[sendXRPPayment] ✓ Destination address validated')
 
     // Validate amount
+    console.log('[sendXRPPayment] Validating amount...')
     const amount = parseFloat(amountXRP)
+    console.log('[sendXRPPayment] Parsed amount:', amount)
+    
     if (isNaN(amount) || amount <= 0) {
+      console.error('[sendXRPPayment] ✗ Invalid amount:', amount)
       return {
         success: false,
         error: 'Invalid amount: must be a positive number'
       }
     }
+    console.log('[sendXRPPayment] ✓ Amount validated')
 
     // Get environment config
+    console.log('[sendXRPPayment] Getting environment config...')
     const config = getEnvConfig()
+    console.log('[sendXRPPayment] ✓ Environment config loaded')
 
     // Connect to testnet
+    console.log('[sendXRPPayment] Connecting to testnet...')
     client = await connectToTestnet()
+    console.log('[sendXRPPayment] ✓ Connected to testnet')
 
     // Create wallet from secret
-    const wallet = Wallet.fromSeed(config.XRP_TESTNET_WALLET_SECRET)
+    console.log('[sendXRPPayment] Creating wallet from secret...')
+    const wallet = Wallet.fromSecret(config.XRP_TESTNET_WALLET_SECRET) 
+    console.log('[sendXRPPayment] ✓ Wallet created')
+    console.log('[sendXRPPayment] Wallet address:', wallet.address)
 
     // Verify wallet address matches config
+    console.log('[sendXRPPayment] Verifying wallet address matches config...')
+    console.log('[sendXRPPayment] Expected:', config.XRP_TESTNET_WALLET_ADDRESS)
+    console.log('[sendXRPPayment] Actual:', wallet.address)
+    
     if (wallet.address !== config.XRP_TESTNET_WALLET_ADDRESS) {
+      console.error('[sendXRPPayment] ✗ Wallet address mismatch!')
       return {
         success: false,
         error: 'Wallet address mismatch: secret does not match configured address'
       }
     }
+    console.log('[sendXRPPayment] ✓ Wallet address verified')
 
     // Check sender balance
+    console.log('[sendXRPPayment] Checking sender balance...')
     const balanceResult = await getWalletBalance(wallet.address)
+    console.log('[sendXRPPayment] Balance result:', balanceResult)
+    
     if (balanceResult.error) {
+      console.error('[sendXRPPayment] ✗ Failed to check balance:', balanceResult.error)
       return {
         success: false,
         error: `Failed to check sender balance: ${balanceResult.error}`
@@ -340,14 +430,23 @@ export async function sendXRPPayment(params: SendXRPPaymentParams): Promise<Paym
     }
 
     const senderBalance = parseFloat(balanceResult.balance)
+    console.log('[sendXRPPayment] Sender balance:', senderBalance, 'XRP')
+    console.log('[sendXRPPayment] Required amount:', amount, 'XRP')
+    
     if (senderBalance < amount) {
+      console.error('[sendXRPPayment] ✗ Insufficient balance')
       return {
         success: false,
         error: `Insufficient balance: available ${senderBalance} XRP, required ${amount} XRP`
       }
     }
+    console.log('[sendXRPPayment] ✓ Sufficient balance confirmed')
 
     // Prepare payment transaction
+    console.log('[sendXRPPayment] Preparing payment transaction...')
+    const amountInDrops = xrpToDrops(amountXRP)
+    console.log('[sendXRPPayment] Amount in drops:', amountInDrops)
+    
     const payment: {
       TransactionType: 'Payment'
       Account: string
@@ -362,19 +461,22 @@ export async function sendXRPPayment(params: SendXRPPaymentParams): Promise<Paym
     } = {
       TransactionType: 'Payment',
       Account: wallet.address,
-      Amount: xrpToDrops(amountXRP),
+      Amount: amountInDrops,
       Destination: toAddress,
     }
 
     // Add destination tag if provided
     if (destinationTag !== undefined) {
+      console.log('[sendXRPPayment] Adding destination tag:', destinationTag)
       payment.DestinationTag = destinationTag
     }
 
     // Add memo if provided
     if (memo) {
       // Convert memo to hex
+      console.log('[sendXRPPayment] Adding memo:', memo)
       const memoHex = Buffer.from(memo, 'utf8').toString('hex').toUpperCase()
+      console.log('[sendXRPPayment] Memo (hex):', memoHex)
       payment.Memos = [
         {
           Memo: {
@@ -384,22 +486,33 @@ export async function sendXRPPayment(params: SendXRPPaymentParams): Promise<Paym
       ]
     }
 
+    console.log('[sendXRPPayment] Payment transaction prepared:', JSON.stringify(payment, null, 2))
+
     // Submit transaction and wait for validation
+    console.log('[sendXRPPayment] Submitting transaction and waiting for validation...')
     const response = await client.submitAndWait(payment, { wallet })
+    console.log('[sendXRPPayment] ✓ Transaction submitted')
+    console.log('[sendXRPPayment] Response:', JSON.stringify(response, null, 2))
 
     // Check transaction result
     const result = response.result
+    console.log('[sendXRPPayment] Checking transaction result...')
+    console.log('[sendXRPPayment] Result hash:', result.hash)
+    console.log('[sendXRPPayment] Result ledger_index:', result.ledger_index)
     
     if (result.meta && typeof result.meta === 'object' && 'TransactionResult' in result.meta) {
       const txResult = result.meta.TransactionResult
+      console.log('[sendXRPPayment] Transaction result code:', txResult)
       
       if (txResult === 'tesSUCCESS') {
+        console.log('[sendXRPPayment] ✓✓✓ Payment successful! ✓✓✓')
         return {
           success: true,
           transactionHash: result.hash,
           ledgerIndex: result.ledger_index
         }
       } else {
+        console.error('[sendXRPPayment] ✗ Transaction failed with code:', txResult)
         return {
           success: false,
           error: `Transaction failed with code: ${txResult}`
@@ -407,27 +520,40 @@ export async function sendXRPPayment(params: SendXRPPaymentParams): Promise<Paym
       }
     }
 
+    console.error('[sendXRPPayment] ✗ Transaction result is unclear')
+    console.error('[sendXRPPayment] Meta:', result.meta)
     return {
       success: false,
       error: 'Transaction result is unclear'
     }
   } catch (error) {
+    console.error('[sendXRPPayment] ✗✗✗ Exception caught! ✗✗✗')
+    console.error('[sendXRPPayment] Error:', error)
+    
     if (error instanceof Error) {
+      console.error('[sendXRPPayment] Error name:', error.name)
+      console.error('[sendXRPPayment] Error message:', error.message)
+      console.error('[sendXRPPayment] Error stack:', error.stack)
       return {
         success: false,
         error: `Payment failed: ${error.message}`
       }
     }
     
+    console.error('[sendXRPPayment] Unknown error type')
     return {
       success: false,
       error: 'Payment failed: Unknown error'
     }
   } finally {
     // Always disconnect
+    console.log('[sendXRPPayment] Cleaning up...')
     if (client) {
+      console.log('[sendXRPPayment] Disconnecting from testnet...')
       await disconnectFromTestnet(client)
+      console.log('[sendXRPPayment] ✓ Disconnected')
     }
+    console.log('[sendXRPPayment] ========== Payment Process Complete ==========')
   }
 }
 
@@ -451,38 +577,60 @@ export async function sendXRPPayment(params: SendXRPPaymentParams): Promise<Paym
  * ```
  */
 export async function verifyTransaction(txHash: string): Promise<TransactionVerification> {
+  console.log('[verifyTransaction] ========== Starting Transaction Verification ==========')
+  console.log('[verifyTransaction] Transaction hash:', txHash)
+  
   let client: Client | null = null
 
   try {
     // Validate transaction hash format
+    console.log('[verifyTransaction] Validating transaction hash format...')
+    console.log('[verifyTransaction] Hash length:', txHash?.length)
+    console.log('[verifyTransaction] Hash type:', typeof txHash)
+    
     if (!txHash || typeof txHash !== 'string' || txHash.length !== 64) {
+      console.error('[verifyTransaction] ✗ Invalid transaction hash format')
       return {
         verified: false,
         status: 'failed',
         details: { error: 'Invalid transaction hash format' }
       }
     }
+    console.log('[verifyTransaction] ✓ Hash format validated')
 
     // Connect to testnet
+    console.log('[verifyTransaction] Connecting to testnet...')
     client = await connectToTestnet()
+    console.log('[verifyTransaction] ✓ Connected to testnet')
 
     // Request transaction details
+    console.log('[verifyTransaction] Requesting transaction details...')
     const response = await client.request({
       command: 'tx',
       transaction: txHash
     })
+    console.log('[verifyTransaction] ✓ Transaction details received')
+    console.log('[verifyTransaction] Response:', JSON.stringify(response, null, 2))
 
     const tx = response.result
+    console.log('[verifyTransaction] Transaction validated status:', tx.validated)
 
     // Check if transaction is validated
     if (tx.validated === true) {
+      console.log('[verifyTransaction] ✓ Transaction is validated')
+      
       // Check transaction result
       const meta = tx.meta
+      console.log('[verifyTransaction] Checking transaction result...')
+      console.log('[verifyTransaction] Meta exists:', !!meta)
+      console.log('[verifyTransaction] Meta type:', typeof meta)
       
       if (meta && typeof meta === 'object' && 'TransactionResult' in meta) {
         const txResult = meta.TransactionResult
+        console.log('[verifyTransaction] Transaction result code:', txResult)
         
         if (txResult === 'tesSUCCESS') {
+          console.log('[verifyTransaction] ✓✓✓ Transaction successful! ✓✓✓')
           return {
             verified: true,
             status: 'validated',
@@ -497,6 +645,7 @@ export async function verifyTransaction(txHash: string): Promise<TransactionVeri
             }
           }
         } else {
+          console.error('[verifyTransaction] ✗ Transaction failed with code:', txResult)
           return {
             verified: true,
             status: 'failed',
@@ -510,6 +659,7 @@ export async function verifyTransaction(txHash: string): Promise<TransactionVeri
     }
 
     // Transaction exists but not yet validated
+    console.log('[verifyTransaction] Transaction exists but not yet validated')
     return {
       verified: false,
       status: 'pending',
@@ -519,9 +669,17 @@ export async function verifyTransaction(txHash: string): Promise<TransactionVeri
       }
     }
   } catch (error) {
+    console.error('[verifyTransaction] ✗✗✗ Exception caught! ✗✗✗')
+    console.error('[verifyTransaction] Error:', error)
+    
     if (error instanceof Error) {
+      console.error('[verifyTransaction] Error name:', error.name)
+      console.error('[verifyTransaction] Error message:', error.message)
+      console.error('[verifyTransaction] Error stack:', error.stack)
+      
       // Transaction not found
       if (error.message.includes('txnNotFound')) {
+        console.log('[verifyTransaction] Transaction not found on ledger')
         return {
           verified: false,
           status: 'failed',
@@ -536,6 +694,7 @@ export async function verifyTransaction(txHash: string): Promise<TransactionVeri
       }
     }
 
+    console.error('[verifyTransaction] Unknown error type')
     return {
       verified: false,
       status: 'failed',
@@ -543,9 +702,13 @@ export async function verifyTransaction(txHash: string): Promise<TransactionVeri
     }
   } finally {
     // Always disconnect
+    console.log('[verifyTransaction] Cleaning up...')
     if (client) {
+      console.log('[verifyTransaction] Disconnecting from testnet...')
       await disconnectFromTestnet(client)
+      console.log('[verifyTransaction] ✓ Disconnected')
     }
+    console.log('[verifyTransaction] ========== Verification Process Complete ==========')
   }
 }
 
@@ -568,12 +731,21 @@ export async function verifyTransaction(txHash: string): Promise<TransactionVeri
  * ```
  */
 export async function disconnectFromTestnet(client: Client): Promise<void> {
+  console.log('[disconnectFromTestnet] Starting disconnection...')
+  
   try {
     if (client && client.isConnected()) {
+      console.log('[disconnectFromTestnet] Client is connected, disconnecting...')
       await client.disconnect()
+      console.log('[disconnectFromTestnet] ✓ Successfully disconnected')
+    } else {
+      console.log('[disconnectFromTestnet] Client is already disconnected or null')
     }
   } catch (error) {
     // Log error but don't throw - disconnection failures shouldn't break the flow
-    console.error('Error disconnecting from XRP Testnet:', error)
+    console.error('[disconnectFromTestnet] ✗ Error during disconnection:', error)
+    if (error instanceof Error) {
+      console.error('[disconnectFromTestnet] Error message:', error.message)
+    }
   }
 }

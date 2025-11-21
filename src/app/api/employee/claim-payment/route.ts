@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const session = await auth()
     console.log('[CLAIM-PAYMENT] Session:', { 
       hasSession: !!session, 
-      userId: session?.user?.id,
+      employeeId: session?.user?.id, // Employee ID is session.user.id
       userType: session?.user?.userType,
       email: session?.user?.email
     })
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     console.log('[CLAIM-PAYMENT] Fetching employee record for email:', session.user.email)
     const employee = await prisma.employee.findFirst({
       where: {
-        email: session.user.email || '',
+        id: session.user.id || '',
         isActive: true,
       },
       select: {
