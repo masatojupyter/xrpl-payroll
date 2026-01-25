@@ -14,7 +14,7 @@ export default function Home() {
             {/* Logo/Brand */}
             <div className="inline-block mb-8">
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-green-600 bg-clip-text text-transparent mb-4">
-                XRPL Payroll
+                Seneca
               </h1>
               <div className="h-2 w-full bg-gradient-to-r from-purple-600 to-green-600 rounded-full"></div>
             </div>
@@ -64,7 +64,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
-              Why Choose XRPL Payroll
+              Why Choose Seneca
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               A trusted payroll solution leveraging the powerful features of XRP Ledger
@@ -233,7 +233,7 @@ export default function Home() {
               Get Started Today
             </h2>
             <p className="text-xl text-purple-100 mb-8">
-              Experience the future of payroll payments with XRPL Payroll
+              Experience the future of payroll payments with Seneca
             </p>
             <Link
               href="/register"
@@ -251,7 +251,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-green-400 bg-clip-text text-transparent mb-4">
-                XRPL Payroll
+                Seneca
               </h3>
               <p className="text-sm text-gray-400">
                 Next-generation payroll system leveraging XRP Ledger technology
@@ -304,7 +304,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
-            <p>© 2025 XRPL Payroll. Powered by XRP Ledger.</p>
+            <p>© 2025 Seneca. Powered by XRP Ledger.</p>
           </div>
         </div>
       </footer>
