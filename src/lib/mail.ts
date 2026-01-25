@@ -16,7 +16,7 @@ const createTransporter = () => {
 // Basic email configuration
 const mailConfig = {
   from: process.env.EMAIL_FROM || 'noreply@xrpl-payroll.com',
-  fromName: 'XRPL Payroll',
+  fromName: 'Seneca',
 };
 
 /**

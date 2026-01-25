@@ -142,7 +142,7 @@ function SetPasswordForm() {
           <div className="text-center mb-8">
             <div className="inline-block">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-green-600 bg-clip-text text-transparent mb-2">
-                XRPL Payroll
+                Seneca
               </h1>
               <div className="h-1 w-full bg-gradient-to-r from-purple-600 to-green-600 rounded-full"></div>
             </div>
@@ -189,7 +189,7 @@ function SetPasswordForm() {
         <div className="text-center mb-8">
           <div className="inline-block">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-green-600 bg-clip-text text-transparent mb-2">
-              XRPL Payroll
+              Seneca
             </h1>
             <div className="h-1 w-full bg-gradient-to-r from-purple-600 to-green-600 rounded-full"></div>
           </div>
