@@ -11,7 +11,7 @@ export function LandingHeader() {
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="flex items-center">
               <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-green-600 bg-clip-text text-transparent">
-                Seneca
+                XRPL Payroll
               </div>
             </div>
           </Link>
