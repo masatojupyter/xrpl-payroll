@@ -1,6 +1,8 @@
-import NextAuth, { type DefaultSession } from "next-auth"
+import NextAuth, { type DefaultSession, type User as NextAuthUser } from "next-auth"
+import type { JWT } from "next-auth/jwt"
+import type { Session } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { prisma } from "@/../../prisma/client"
+import { prisma } from "../../prisma/client"
 import bcrypt from "bcryptjs"
 
 declare module "next-auth" {
@@ -20,9 +22,9 @@ declare module "next-auth" {
   }
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const authConfig = {
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
@@ -124,7 +126,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user: NextAuthUser | undefined }) {
       if (user) {
         token.id = user.id
         token.role = user.role
@@ -133,7 +135,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
@@ -143,4 +145,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
   },
-})
+}
+
+export const { handlers, signIn, signOut, auth } = NextAuth(authConfig)
+
+export const GET = handlers.GET
+export const POST = handlers.POST
